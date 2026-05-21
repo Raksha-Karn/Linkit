@@ -27,7 +27,7 @@ def redirect_url(code: str, db: Session = Depends(get_db)):
     url = db.query(models.URL).filter(models.URL.short_code == code).first()
     if not url:
         raise HTTPException(404)
-    if url.expires_at and datetime.now(timezone.utc) > url.expires_at:
+    if url.expires_at and datetime.utcnow() > url.expires_at:
         raise HTTPException(410, detail="Link expired")
     url.click_count += 1; db.commit()
     return RedirectResponse(url.original_url)
