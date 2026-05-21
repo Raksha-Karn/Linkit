@@ -1,4 +1,10 @@
 services:
+  app:
+    build: .
+    expose:
+      - "8000"
+    depends_on:
+      - db
   db:
     image: postgres:15
     container_name: my-postgres
