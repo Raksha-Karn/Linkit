@@ -2,6 +2,7 @@ from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
 from .database import Base
+from sqlalchemy.sql import func
 
 
 class User(Base):
@@ -10,6 +11,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(index=True, unique=True)
     hashed_password: Mapped[str] = mapped_column()
     is_active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     urls: Mapped[list["URL"]] = relationship(back_populates="owner")
 
 
