@@ -1,99 +1,94 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>URL Shortener Dashboard</title>
-  <style>
-    body { font-family: Arial; max-width: 700px; margin: auto; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; }
-    .box { border: 1px solid #ddd; padding: 15px; margin: 15px 0; }
-    .link { color: blue; cursor: pointer; }
-  </style>
+  <title>URL Shortener Pro</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
-<body>
 
-<h1>URL Shortener</h1>
+<body class="bg-gray-100 font-sans">
 
-<div class="box">
-  <h2>Login</h2>
-  <input id="loginEmail" placeholder="email" />
-  <input id="loginPass" type="password" placeholder="password" />
-  <button onclick="login()">Login</button>
-</div>
+<div class="max-w-3xl mx-auto p-6">
 
-<div class="box">
-  <h2>Register</h2>
-  <input id="regEmail" placeholder="email" />
-  <input id="regPass" type="password" placeholder="password" />
-  <button onclick="register()">Register</button>
-</div>
+  <h1 class="text-3xl font-bold mb-6 text-center"> URL Shortener </h1>
 
-<div class="box">
-  <h2>Shorten URL</h2>
-  <input id="url" placeholder="https://example.com" />
-  <input id="days" placeholder="expires in days" />
-  <button onclick="shorten()">Shorten</button>
-  <p id="shortResult"></p>
-</div>
+  <div class="bg-white p-4 rounded shadow mb-6">
+    <h2 class="font-bold mb-2">Shorten URL</h2>
 
-<div class="box">
-  <h2>Get Stats</h2>
-  <input id="code" placeholder="short code" />
-  <button onclick="getStats()">Get Stats</button>
-  <pre id="stats"></pre>
+    <input id="url" class="border p-2 w-full mb-2" placeholder="https://example.com" />
+    <input id="days" class="border p-2 w-full mb-2" placeholder="Expiry days" />
+
+    <button onclick="shorten()" class="bg-blue-500 text-white px-4 py-2 rounded">
+      Shorten
+    </button>
+
+    <div id="result" class="mt-4"></div>
+
+    <canvas id="qr"></canvas>
+  </div>
+
+  <div class="bg-white p-4 rounded shadow">
+    <h2 class="font-bold mb-2">Analytics</h2>
+
+    <input id="code" class="border p-2 w-full mb-2" placeholder="short code" />
+
+    <button onclick="getStats()" class="bg-green-500 text-white px-4 py-2 rounded">
+      Get Stats
+    </button>
+
+    <pre id="stats" class="mt-4 bg-gray-100 p-2"></pre>
+
+    <canvas id="chart" class="mt-4"></canvas>
+  </div>
+
 </div>
 
 <script>
-let token = localStorage.getItem("token");
-
 const API = "http://localhost:8000";
 
-async function login() {
-  const form = new URLSearchParams();
-  form.append("username", document.getElementById("loginEmail").value);
-  form.append("password", document.getElementById("loginPass").value);
-
-  const res = await fetch(API + "/auth/login", {
-    method: "POST",
-    body: form
-  });
-
-  const data = await res.json();
-  token = data.access_token;
-  localStorage.setItem("token", token);
-
-  alert("Logged in!");
-}
-
-async function register() {
-  await fetch(API + "/auth/register", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      email: document.getElementById("regEmail").value,
-      password: document.getElementById("regPass").value
-    })
-  });
-
-  alert("Registered!");
-}
-
 async function shorten() {
+  const url = document.getElementById("url").value;
+  const days = parseInt(document.getElementById("days").value || "1");
+
   const res = await fetch(API + "/shorten", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer " + token
+      "Authorization": "Bearer " + localStorage.getItem("token")
     },
     body: JSON.stringify({
-      original_url: document.getElementById("url").value,
-      expires_days: parseInt(document.getElementById("days").value || "1")
+      original_url: url,
+      expires_days: days
     })
   });
 
   const data = await res.json();
 
-  document.getElementById("shortResult").innerHTML =
-    `Short link: <a href="${API}/${data.short_code}" target="_blank">${API}/${data.short_code}</a>`;
+  const shortUrl = `${API}/${data.short_code}`;
+
+  document.getElementById("result").innerHTML = `
+    <div class="mt-2 p-2 bg-gray-100 rounded">
+      <p class="font-bold">Short URL:</p>
+
+      <a class="text-blue-600" href="${shortUrl}" target="_blank">
+        ${shortUrl}
+      </a>
+
+      <button onclick="copyText('${shortUrl}')" class="ml-2 bg-gray-300 px-2 py-1 rounded">
+        Copy
+      </button>
+    </div>
+  `;
+
+  QRCode.toCanvas(document.getElementById("qr"), shortUrl);
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text);
+  alert("Copied!");
 }
 
 async function getStats() {
@@ -101,12 +96,25 @@ async function getStats() {
 
   const res = await fetch(API + "/stats/" + code, {
     headers: {
-      "Authorization": "Bearer " + token
+      "Authorization": "Bearer " + localStorage.getItem("token")
     }
   });
 
   const data = await res.json();
-  document.getElementById("stats").innerText = JSON.stringify(data, null, 2);
+
+  document.getElementById("stats").innerText =
+    JSON.stringify(data, null, 2);
+
+  new Chart(document.getElementById("chart"), {
+    type: "bar",
+    data: {
+      labels: ["Clicks"],
+      datasets: [{
+        label: "Total Clicks",
+        data: [data.click_count],
+      }]
+    }
+  });
 }
 </script>
 
