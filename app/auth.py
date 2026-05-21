@@ -31,6 +31,6 @@ def decode_token(token: str = Depends(oauth2_scheme)):
         email = payload.get("sub")
         if email is None:
             raise HTTPException(status_code=401)
-            return email
+        return email
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid Token")
