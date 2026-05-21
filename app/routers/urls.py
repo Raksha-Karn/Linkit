@@ -22,7 +22,7 @@ def shorten_url(data: schema.URLCreate, db: Session = Depends(get_db), email: st
     db.add(url); db.commit(); db.refresh(url)
     return url
 
-@router.get("/{code}")
+@router.get("/r/{code}")
 def redirect_url(code: str, db: Session = Depends(get_db)):
     url = db.query(models.URL).filter(models.URL.short_code == code).first()
     if not url:
