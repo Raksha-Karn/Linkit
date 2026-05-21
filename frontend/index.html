@@ -1,72 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>URL Shortener</title>
+<meta charset="UTF-8" />
+<title>URL Shortener</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+  .fade { transition: all 0.3s ease; }
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  .shake {
+    animation: shake 0.2s;
+  }
+</style>
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
 
-<div class="max-w-4xl mx-auto p-6">
+<div id="toast" class="hidden fixed top-5 right-5 px-4 py-2 rounded shadow-lg text-white"></div>
 
-  <h1 class="text-3xl font-bold text-center mb-6">
-     URL Shortener
-  </h1>
+<div class="bg-white shadow-sm p-4 flex justify-between items-center">
+  <h1 class="text-xl font-bold"> URL Shortener</h1>
 
-  <div class="grid grid-cols-2 gap-4 mb-6">
+  <div id="userBar" class="hidden items-center gap-3">
+    <span class="text-sm text-gray-600">Logged in</span>
+    <button onclick="logout()" class="bg-red-500 text-white px-3 py-1 rounded">
+      Logout
+    </button>
+  </div>
+</div>
 
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="font-bold mb-2">Register</h2>
-      <input id="regEmail" class="border p-2 w-full mb-2" placeholder="Email">
-      <input id="regPass" type="password" class="border p-2 w-full mb-2" placeholder="Password">
-      <button onclick="register()" class="bg-blue-500 text-white px-3 py-2 rounded w-full">
+<div class="max-w-5xl mx-auto p-6">
+
+  <div id="authBox" class="grid md:grid-cols-2 gap-6">
+
+    <div class="bg-white p-6 rounded-xl shadow" id="registerBox">
+      <h2 class="font-bold mb-3 text-lg">Create account</h2>
+
+      <input id="regEmail" class="border p-2 w-full mb-2 rounded" placeholder="Email">
+      <input id="regPass" type="password" class="border p-2 w-full mb-3 rounded" placeholder="Password">
+
+      <button id="registerBtn" onclick="register()" class="bg-blue-600 text-white w-full py-2 rounded">
         Register
       </button>
     </div>
 
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="font-bold mb-2">Login</h2>
-      <input id="loginEmail" class="border p-2 w-full mb-2" placeholder="Email">
-      <input id="loginPass" type="password" class="border p-2 w-full mb-2" placeholder="Password">
-      <button onclick="login()" class="bg-green-500 text-white px-3 py-2 rounded w-full">
+    <div class="bg-white p-6 rounded-xl shadow" id="loginBox">
+      <h2 class="font-bold mb-3 text-lg">Welcome back</h2>
+
+      <input id="loginEmail" class="border p-2 w-full mb-2 rounded" placeholder="Email">
+      <input id="loginPass" type="password" class="border p-2 w-full mb-3 rounded" placeholder="Password">
+
+      <button id="loginBtn" onclick="login()" class="bg-green-600 text-white w-full py-2 rounded">
         Login
       </button>
     </div>
 
   </div>
 
-  <div class="bg-white p-4 rounded shadow mb-6">
-    <h2 class="font-bold mb-2">Shorten URL</h2>
+  <div id="appBox" class="hidden fade">
 
-    <input id="url" class="border p-2 w-full mb-2" placeholder="https://example.com">
-    <input id="days" class="border p-2 w-full mb-2" placeholder="Expiry days (optional)">
+    <div class="flex gap-2 mb-6">
+      <button onclick="showTab('shorten')" class="tab bg-blue-600 text-white px-4 py-2 rounded">
+        Shorten
+      </button>
+      <button onclick="showTab('stats')" class="tab bg-gray-300 px-4 py-2 rounded">
+        Analytics
+      </button>
+    </div>
 
-    <button onclick="shorten()" class="bg-purple-500 text-white px-4 py-2 rounded">
-      Shorten
-    </button>
+    <div id="shortenTab" class="bg-white p-6 rounded-xl shadow">
+      <h2 class="font-bold mb-3">Create Short Link</h2>
 
-    <div id="result" class="mt-4"></div>
-    <canvas id="qr" class="mt-4"></canvas>
-  </div>
+      <input id="url" class="border p-2 w-full mb-2 rounded" placeholder="https://example.com">
+      <input id="days" class="border p-2 w-full mb-3 rounded" placeholder="Expiry days (default 1)">
 
-  <div class="bg-white p-4 rounded shadow">
-    <h2 class="font-bold mb-2">Analytics</h2>
+      <button onclick="shorten()" class="bg-purple-600 text-white px-4 py-2 rounded w-full">
+        Generate
+      </button>
 
-    <input id="code" class="border p-2 w-full mb-2" placeholder="Enter short code">
+      <div id="result" class="mt-4"></div>
+      <canvas id="qr" class="mt-4"></canvas>
+    </div>
 
-    <button onclick="getStats()" class="bg-yellow-500 text-white px-4 py-2 rounded">
-      Get Stats
-    </button>
+    <div id="statsTab" class="hidden bg-white p-6 rounded-xl shadow">
+      <h2 class="font-bold mb-3">Analytics</h2>
 
-    <pre id="stats" class="bg-gray-100 p-3 mt-3"></pre>
+      <input id="code" class="border p-2 w-full mb-3 rounded" placeholder="Enter short code">
 
-    <canvas id="chart" class="mt-4"></canvas>
+      <button onclick="getStats()" class="bg-yellow-500 text-white px-4 py-2 rounded w-full">
+        Get Stats
+      </button>
+
+      <pre id="stats" class="bg-gray-100 p-3 mt-4 rounded"></pre>
+      <canvas id="chart" class="mt-4"></canvas>
+    </div>
+
   </div>
 
 </div>
@@ -75,34 +112,111 @@
 const API = "http://localhost:8000";
 let token = localStorage.getItem("token");
 
-async function register() {
-  await fetch(API + "/auth/register", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      email: document.getElementById("regEmail").value,
-      password: document.getElementById("regPass").value
-    })
-  });
+function showToast(msg, type = "info") {
+  const el = document.getElementById("toast");
 
-  alert("Registered!");
+  el.innerText = msg;
+  el.className =
+    "fixed top-5 right-5 px-4 py-2 rounded shadow-lg text-white fade " +
+    (type === "error" ? "bg-red-600" : "bg-black");
+
+  el.classList.remove("hidden");
+
+  setTimeout(() => el.classList.add("hidden"), 2500);
+}
+
+function checkAuth() {
+  if (token) {
+    document.getElementById("authBox").classList.add("hidden");
+    document.getElementById("appBox").classList.remove("hidden");
+    document.getElementById("userBar").classList.remove("hidden");
+  }
+}
+checkAuth();
+
+function logout() {
+  localStorage.removeItem("token");
+  location.reload();
+}
+
+function showTab(tab) {
+  document.getElementById("shortenTab").classList.add("hidden");
+  document.getElementById("statsTab").classList.add("hidden");
+
+  document.getElementById(tab + "Tab").classList.remove("hidden");
+}
+
+async function register() {
+  const btn = document.getElementById("registerBtn");
+
+  btn.disabled = true;
+  btn.innerText = "Creating...";
+
+  try {
+    const res = await fetch(API + "/auth/register", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        email: regEmail.value,
+        password: regPass.value
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      showToast(data.detail || "Registration failed", "error");
+      return;
+    }
+
+    showToast("Account created!");
+  } catch {
+    showToast("Network error", "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Register";
+  }
 }
 
 async function login() {
-  const form = new URLSearchParams();
-  form.append("username", document.getElementById("loginEmail").value);
-  form.append("password", document.getElementById("loginPass").value);
+  const btn = document.getElementById("loginBtn");
 
-  const res = await fetch(API + "/auth/login", {
-    method: "POST",
-    body: form
-  });
+  btn.disabled = true;
+  btn.innerText = "Logging in...";
 
-  const data = await res.json();
-  token = data.access_token;
-  localStorage.setItem("token", token);
+  try {
+    const form = new URLSearchParams();
+    form.append("username", loginEmail.value);
+    form.append("password", loginPass.value);
 
-  alert("Logged in!");
+    const res = await fetch(API + "/auth/login", {
+      method: "POST",
+      body: form
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      showToast(data.detail || "Invalid credentials", "error");
+
+      loginBox.classList.add("shake");
+      setTimeout(() => loginBox.classList.remove("shake"), 200);
+
+      return;
+    }
+
+    token = data.access_token;
+    localStorage.setItem("token", token);
+
+    showToast("Welcome back!");
+    checkAuth();
+
+  } catch {
+    showToast("Network error", "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Login";
+  }
 }
 
 async function shorten() {
@@ -123,17 +237,18 @@ async function shorten() {
 
   const data = await res.json();
 
-  const shortUrl = `${API}/${data.short_code}`;
+  if (!res.ok) {
+    showToast(data.detail || "Failed to shorten URL", "error");
+    return;
+  }
+
+  const shortUrl = `${API}/r/${data.short_code}`;
 
   document.getElementById("result").innerHTML = `
-    <div class="p-3 bg-gray-100 rounded">
-      <p class="font-bold">Short URL:</p>
-
-      <a class="text-blue-600" href="${shortUrl}" target="_blank">
-        ${shortUrl}
-      </a>
-
-      <button onclick="copyText('${shortUrl}')"
+    <div class="p-3 bg-gray-50 rounded border">
+      <p class="font-semibold">Short URL</p>
+      <a class="text-blue-600" href="${shortUrl}" target="_blank">${shortUrl}</a>
+      <button onclick="navigator.clipboard.writeText('${shortUrl}')"
         class="ml-2 bg-gray-300 px-2 py-1 rounded">
         Copy
       </button>
@@ -143,26 +258,23 @@ async function shorten() {
   QRCode.toCanvas(document.getElementById("qr"), shortUrl);
 }
 
-function copyText(text) {
-  navigator.clipboard.writeText(text);
-  alert("Copied!");
-}
-
 async function getStats() {
   const code = document.getElementById("code").value;
 
   const res = await fetch(API + "/stats/" + code, {
-    headers: {
-      "Authorization": "Bearer " + token
-    }
+    headers: {"Authorization": "Bearer " + token}
   });
 
   const data = await res.json();
 
+  if (!res.ok) {
+    showToast(data.detail || "Failed to fetch stats", "error");
+    return;
+  }
+
   document.getElementById("stats").innerText =
     JSON.stringify(data, null, 2);
 
-  // Chart
   new Chart(document.getElementById("chart"), {
     type: "bar",
     data: {

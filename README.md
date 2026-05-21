@@ -1,0 +1,121 @@
+# 🌠 Linkit 
+
+A **super super scalable URL shortener system!**
+
+---
+
+## Special Thanks To
+
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-00C7B7?style=for-the-badge&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-Caching-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+
+---
+
+## 🌷 What is Linkit?
+
+**Linkit** is a distributed URL shortener system designed like a real-world production backend.
+
+It demonstrates:
+-  High-performance caching
+-  Scalable system design
+-  Secure authentication
+-  Analytics tracking
+-  Load-balanced architecture
+
+---
+
+##  Features
+
+###  Authentication
+- JWT-based login system
+- Password hashing
+- Protected routes
+
+---
+
+###  Distributed Architecture
+- Multiple FastAPI instances (horizontal scaling 🌱)
+- Nginx load balancing traffic like a pro 
+- Shared PostgreSQL database 
+- Redis cache layer for lightning speed 
+
+---
+
+###  Performance & Scaling
+- Redis caching for instant redirects
+- Rate limiting to prevent abuse 
+- Stateless backend design (scale freely)
+
+---
+
+###  URL Shortening Magic
+- Generate unique short links 
+- Optional expiration time 
+- Fast redirection system
+- Click tracking per link 
+
+---
+
+###  Analytics Dashboard
+- Click counter per URL
+- Real-time stats endpoint
+- Track what’s popular 
+
+---
+
+##  System Architecture
+
+Client --> Nginx Load Balancer --> FastAPI (multiple containers) --> Redis (cache layer) --> PostgreSQL
+
+
+---
+
+## API Endpoints
+
+### Auth
+- POST /auth/register
+- POST /auth/login
+
+### URLs
+- POST /shorten
+- GET /{short_code}
+- GET /stats/{short_code}
+
+##  Tech Stack
+
+-  FastAPI
+-  PostgreSQL
+-  Redis
+-  Docker & Docker Compose
+-  SQLAlchemy + Alembic
+-  HTML + Tailwind CSS
+-  Chart.js
+
+---
+
+## Setup & Run
+
+### Clone repository
+
+```bash
+git clone https://github.com/Raksha-Karn/Linkit.git
+cd url-shortener
+```
+
+### Start Docker Services
+
+```bash
+docker compose up --build
+```
+
+### Run Database Migrations
+
+```bash
+alembic upgrade head
+```
+### Launch Frontend
+ - Open frontend/index.html
+
+## Thanks!
