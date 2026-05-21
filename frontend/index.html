@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>URL Shortener Dashboard</title>
+  <style>
+    body { font-family: Arial; max-width: 700px; margin: auto; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; }
+    .box { border: 1px solid #ddd; padding: 15px; margin: 15px 0; }
+    .link { color: blue; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h1>URL Shortener</h1>
+
+<div class="box">
+  <h2>Login</h2>
+  <input id="loginEmail" placeholder="email" />
+  <input id="loginPass" type="password" placeholder="password" />
+  <button onclick="login()">Login</button>
+</div>
+
+<div class="box">
+  <h2>Register</h2>
+  <input id="regEmail" placeholder="email" />
+  <input id="regPass" type="password" placeholder="password" />
+  <button onclick="register()">Register</button>
+</div>
+
+<div class="box">
+  <h2>Shorten URL</h2>
+  <input id="url" placeholder="https://example.com" />
+  <input id="days" placeholder="expires in days" />
+  <button onclick="shorten()">Shorten</button>
+  <p id="shortResult"></p>
+</div>
+
+<div class="box">
+  <h2>Get Stats</h2>
+  <input id="code" placeholder="short code" />
+  <button onclick="getStats()">Get Stats</button>
+  <pre id="stats"></pre>
+</div>
+
+<script>
+let token = localStorage.getItem("token");
+
+const API = "http://localhost:8000";
+
+async function login() {
+  const form = new URLSearchParams();
+  form.append("username", document.getElementById("loginEmail").value);
+  form.append("password", document.getElementById("loginPass").value);
+
+  const res = await fetch(API + "/auth/login", {
+    method: "POST",
+    body: form
+  });
+
+  const data = await res.json();
+  token = data.access_token;
+  localStorage.setItem("token", token);
+
+  alert("Logged in!");
+}
+
+async function register() {
+  await fetch(API + "/auth/register", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      email: document.getElementById("regEmail").value,
+      password: document.getElementById("regPass").value
+    })
+  });
+
+  alert("Registered!");
+}
+
+async function shorten() {
+  const res = await fetch(API + "/shorten", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({
+      original_url: document.getElementById("url").value,
+      expires_days: parseInt(document.getElementById("days").value || "1")
+    })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("shortResult").innerHTML =
+    `Short link: <a href="${API}/${data.short_code}" target="_blank">${API}/${data.short_code}</a>`;
+}
+
+async function getStats() {
+  const code = document.getElementById("code").value;
+
+  const res = await fetch(API + "/stats/" + code, {
+    headers: {
+      "Authorization": "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+  document.getElementById("stats").innerText = JSON.stringify(data, null, 2);
+}
+</script>
+
+</body>
+</html>
