@@ -1,9 +1,6 @@
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from pathlib import Path
-import sys
-sys.path.append(str(Path(__file__).resolve().parent.parent))
 from app import models, schema, auth
 from app.database import get_db
 

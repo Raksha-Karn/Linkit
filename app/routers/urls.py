@@ -3,10 +3,6 @@ import secrets
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-import secrets
-from pathlib import Path
-import sys
-sys.path.append(str(Path(__file__).resolve().parent.parent))
 from app import models, schema, auth
 from app.database import get_db
 
