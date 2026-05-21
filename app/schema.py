@@ -11,7 +11,7 @@ class UserCreate(BaseModel):
 class UserOut(BaseModel):
     id: int
     email: EmailStr
-    model_config = {"from_attributes: True"}
+    model_config = {"from_attributes": True}
 
 
 class URLCreate(BaseModel):
@@ -24,7 +24,7 @@ class URLOut(BaseModel):
     original_url: str
     click_count: int
     expires_at: Optional[datetime]
-    model_config = {"from_attributes: True"}
+    model_config = {"from_attributes": True}
 
 
 class Token(BaseModel):
