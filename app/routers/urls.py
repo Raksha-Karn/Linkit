@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import secrets
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -48,7 +48,7 @@ def shorten_url(
     rate_limit(request.client.host)
     owner = db.query(models.User).filter(models.User.email == email).first()
     short_code = secrets.token_urlsafe(6)
-    expire = datetime.now(timezone.utc) + timedelta(days=data.expires_days)
+    expire = datetime.utcnow() + timedelta(days=data.expires_days)
     url = models.URL(
         original_url=str(data.original_url),
         short_code=short_code,
@@ -75,7 +75,7 @@ def redirect_url(code: str, request: Request, db: Session = Depends(get_db)):
     url = db.query(models.URL).filter(models.URL.short_code == code).first()
     if not url:
         raise HTTPException(404)
-    if url.expires_at and datetime.now(timezone.utc) > url.expires_at:
+    if url.expires_at and datetime.utcnow() > url.expires_at:
         raise HTTPException(410, detail="Link expired")
 
     r.setex(name=cache_key, value=url.original_url, time=3600)
