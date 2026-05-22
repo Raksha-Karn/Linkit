@@ -99,7 +99,7 @@ Monitor the click count and expiry time!
 
 ##  System Architecture
 
-Client --> Nginx Load Balancer --> FastAPI (multiple containers) --> Redis (cache layer) --> PostgreSQL
+Client --> Traefik Load Balancer --> FastAPI (multiple containers) --> Redis (cache layer) --> PostgreSQL
 
 
 ---
@@ -123,7 +123,7 @@ Client --> Nginx Load Balancer --> FastAPI (multiple containers) --> Redis (cach
 -  Docker & Docker Compose
 -  SQLAlchemy + Alembic
 -  HTML + Tailwind CSS
--  Chart.js
+-  Traefik
 
 ---
 
