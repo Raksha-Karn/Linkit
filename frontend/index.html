@@ -1003,9 +1003,10 @@ async function loadUrls() {
   try {
     const res = await fetch(`${API}/urls`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': token ? `Bearer ${token}` : ""
       }
     });
+    console.log("TOKEN:", token);
 
     const data = await res.json();
 

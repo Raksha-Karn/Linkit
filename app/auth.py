@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 
 load_dotenv()
@@ -25,12 +26,21 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def decode_token(token: str = Depends(oauth2_scheme)):
+security = HTTPBearer()
+
+def decode_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        email = payload.get("sub")
-        if email is None:
-            raise HTTPException(status_code=401)
-        return email
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid Token")
+        payload = jwt.decode(
+            token,
+            os.getenv("SECRET_KEY"),
+            algorithms=["HS256"]
+        )
+        return payload["email"]
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
