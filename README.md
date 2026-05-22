@@ -31,16 +31,20 @@ It demonstrates:
 ## How It Looks
 
 ### Login/Signup
+JWT based authentication!
 
 ![Signup](./screenshots/login.png)
 
 ### Home
+The cleanest UI ever!
 ![Home](./screenshots/home.png)
 
 ### Shorten
+Shorten any link in 0.000001 seconds!
 ![Shorten](./screenshots/search.png)
 
 ### Stats
+Monitor the click count and expiry time!
 ![Stats](./screenshots/stats.png)
 
 
