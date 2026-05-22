@@ -413,9 +413,8 @@
     transition: all var(--transition);
     animation: fadeUp 0.3s ease both;
     flex-wrap: wrap;
-    cursor: pointer;
   }
-  .url-item:hover { border-color: var(--border-hover); background: var(--surface2); transform: translateY(-2px);}
+  .url-item:hover { border-color: var(--border-hover); background: var(--surface2); }
 
   .url-item-icon {
     width: 36px; height: 36px;
@@ -990,48 +989,20 @@ function copyUrl(code) {
   navigator.clipboard.writeText(url).then(() => showToast('Link copied'));
 }
 
-async function loadUrls() {
-  const list = document.getElementById('url-list');
-
-  list.innerHTML = `
-    <div class="loading-state">
-      <span class="spinner"></span>
-      &nbsp; Loading links…
-    </div>
-  `;
-
-  try {
-    const res = await fetch(`${API}/urls`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : ""
-      }
-    });
-    console.log("TOKEN:", token);
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(
-        typeof data.detail === 'string'
-          ? data.detail
-          : 'Failed to load URLs'
-      );
-    }
-
-    allUrls = data;
-    renderUrls();
-
-  } catch (e) {
-    list.innerHTML = `
-      <div class="empty">
-        <h3>Error</h3>
-        <p>${e.message}</p>
-      </div>
-    `;
+function loadUrls() {
+  const stored = localStorage.getItem('snip_urls_' + userEmail);
+  if (stored) {
+    try { allUrls = JSON.parse(stored); } catch(e) { allUrls = []; }
   }
+  renderUrls();
+}
+
+function saveUrls() {
+  localStorage.setItem('snip_urls_' + userEmail, JSON.stringify(allUrls));
 }
 
 function renderUrls() {
+  saveUrls();
   const list = document.getElementById('url-list');
   if (!allUrls.length) {
     list.innerHTML = `
@@ -1051,9 +1022,7 @@ function renderUrls() {
     const hostOnly = (() => { try { return new URL(u.original_url).hostname; } catch(e) { return u.original_url; } })();
 
     return `
-    <div class="url-item"
-     style="animation-delay:${i * 0.04}s; cursor:pointer"
-     onclick="window.open('${shortUrl}', '_blank')">
+    <div class="url-item" style="animation-delay:${i * 0.04}s">
       <div class="url-item-icon">🔗</div>
       <div class="url-item-info">
         <span class="url-item-short">
@@ -1071,15 +1040,10 @@ function renderUrls() {
         </span>
       </div>
       <div class="url-actions">
-        <button class="btn btn-ghost btn-sm btn-icon"
-  title="Copy link"
-  onclick="event.stopPropagation(); copyUrl('${u.short_code}')">
+        <button class="btn btn-ghost btn-sm btn-icon" title="Copy link" onclick="copyUrl('${u.short_code}')">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 10V2h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         </button>
-        <button class="btn btn-ghost btn-sm"
-  onclick="event.stopPropagation(); openStats('${u.short_code}')">
-  Stats
-</button>
+        <button class="btn btn-ghost btn-sm" onclick="openStats('${u.short_code}')">Stats</button>
       </div>
     </div>`;
   }).join('');
