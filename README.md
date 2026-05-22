@@ -69,7 +69,7 @@ Monitor the click count and expiry time!
 
 ###  Distributed Architecture
 - Multiple FastAPI instances (horizontal scaling 🌱)
-- Nginx load balancing traffic like a pro 
+- Traefik load balancing traffic like a pro 
 - Shared PostgreSQL database 
 - Redis cache layer for lightning speed 
 
