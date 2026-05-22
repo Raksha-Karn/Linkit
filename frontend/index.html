@@ -989,20 +989,47 @@ function copyUrl(code) {
   navigator.clipboard.writeText(url).then(() => showToast('Link copied'));
 }
 
-function loadUrls() {
-  const stored = localStorage.getItem('snip_urls_' + userEmail);
-  if (stored) {
-    try { allUrls = JSON.parse(stored); } catch(e) { allUrls = []; }
-  }
-  renderUrls();
-}
+async function loadUrls() {
+  const list = document.getElementById('url-list');
 
-function saveUrls() {
-  localStorage.setItem('snip_urls_' + userEmail, JSON.stringify(allUrls));
+  list.innerHTML = `
+    <div class="loading-state">
+      <span class="spinner"></span>
+      &nbsp; Loading links…
+    </div>
+  `;
+
+  try {
+    const res = await fetch(`${API}/urls`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        typeof data.detail === 'string'
+          ? data.detail
+          : 'Failed to load URLs'
+      );
+    }
+
+    allUrls = data;
+    renderUrls();
+
+  } catch (e) {
+    list.innerHTML = `
+      <div class="empty">
+        <h3>Error</h3>
+        <p>${e.message}</p>
+      </div>
+    `;
+  }
 }
 
 function renderUrls() {
-  saveUrls();
   const list = document.getElementById('url-list');
   if (!allUrls.length) {
     list.innerHTML = `
