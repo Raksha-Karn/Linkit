@@ -28,6 +28,24 @@ It demonstrates:
 
 ---
 
+## How It Looks
+
+### Login/Signup
+
+![Signup](./screenshots/login.png)
+
+### Home
+![Home](./screenshots/home.png)
+
+### Shorten
+![Shorten](./screenshots/search.png)
+
+### Stats
+![Stats](./screenshots/stats.png)
+
+
+
+
 ##  Features
 
 ###  Authentication
