@@ -2,6 +2,8 @@
 
 A **super super scalable URL shortener system!**
 
+ **Can't trust?** [Try Linkit!](https://linkit-production-9b82.up.railway.app/)
+
 ---
 
 ## Special Thanks To
