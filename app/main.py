@@ -4,7 +4,6 @@ from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from .routers import users, urls
 import os
-from threading import Thread
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
 FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")  
