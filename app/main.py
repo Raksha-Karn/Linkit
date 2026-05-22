@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 from .routers import users, urls
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import Response, FileResponse
 import socket
+from fastapi.staticfiles import StaticFiles
 
 
 app = FastAPI(title="URL Shortener", version="1.0.0")
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
 @app.get("/favicon.ico")
 def favicon():
     return Response(status_code=204) 
@@ -22,11 +24,8 @@ app.add_middleware(
 )
 
 @app.get("/")
-def health_check():
-    return {
-        "status": "ok",
-        "hostname": socket.gethostname()
-    }
+def serve_frontend():
+    return FileResponse("frontend/index.html")
 
 @app.get("/health")
 def health():
