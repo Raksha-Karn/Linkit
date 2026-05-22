@@ -1,24 +1,14 @@
 from fastapi import FastAPI
-from .routers import users, urls
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, FileResponse
-import socket
-import os
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
+from .routers import users, urls
+import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_PATH = os.path.join(BASE_DIR, "..", "frontend")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
+FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")  
 
 app = FastAPI(title="URL Shortener", version="1.0.0")
-app.mount("/frontend", StaticFiles(directory=FRONTEND_PATH, html=True), name="frontend")
-
-@app.get("/favicon.ico")
-def favicon():
-    return Response(status_code=204) 
-
-app.include_router(users.router)
-app.include_router(urls.router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,14 +18,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-def root():
-    return FileResponse(FRONTEND_PATH)
+app.include_router(users.router)
+app.include_router(urls.router)
+
+@app.get("/favicon.ico")
+def favicon():
+    return Response(status_code=204)
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
+app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn
