@@ -80,7 +80,7 @@ Client --> Nginx Load Balancer --> FastAPI (multiple containers) --> Redis (cach
 
 ### URLs
 - POST /shorten
-- GET /{short_code}
+- GET /r/{short_code}
 - GET /stats/{short_code}
 
 ##  Tech Stack
