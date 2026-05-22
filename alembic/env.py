@@ -14,7 +14,10 @@ config = context.config
 import os
 from dotenv import load_dotenv
 load_dotenv()
-config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL").replace("postgres://", "postgresql://", 1))
+url = os.getenv("DATABASE_URL", "")
+if url.startswith("postgres://"):
+    url = url.replace("postgres://", "postgresql://", 1)
+config.set_main_option("sqlalchemy.url", url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
