@@ -400,7 +400,7 @@
     color: var(--text-faint);
   }
 
-  .url-list { display: flex; flex-direction: column; gap: 2px; }
+  .url-list { display: flex; flex-direction: column; gap: 28px; }
 
   .url-item {
     background: var(--surface);
@@ -783,7 +783,7 @@
 <div id="toast"><span class="toast-dot"></span><span id="toast-msg">Copied!</span></div>
 
 <script>
-const API = "";  
+const API = "https://linkit-production-9b82.up.railway.app";  
 let token = localStorage.getItem('snip_token') || '';
 let userEmail = localStorage.getItem('snip_email') || '';
 let allUrls = [];
@@ -807,6 +807,9 @@ function showDashboard() {
   updateNav();
   const initials = userEmail ? userEmail[0].toUpperCase() : '?';
   document.getElementById('dash-subtitle').textContent = `Welcome back, ${userEmail}`;
+  document.getElementById('shorten-error').classList.remove('show');
+  document.getElementById('shorten-result').classList.remove('show');
+  document.getElementById('url-input').value = '';
   loadUrls();
 }
 
@@ -832,14 +835,18 @@ function switchAuthTab(tab) {
 
 function showAuthError(msg) {
   const el = document.getElementById('auth-error');
-  el.textContent = msg;
+  el.textContent = typeof msg === 'string' ? msg : 'Something went wrong.';
   el.classList.add('show');
 }
-
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-password').value;
   if (!email || !pass) return showAuthError('Please fill in all fields.');
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(email)) {
+    return showAuthError('Please enter a valid email address.');
+  }
 
   const btn = document.querySelector('#form-login .btn-primary');
   btn.innerHTML = '<span class="spinner"></span>';
@@ -853,7 +860,19 @@ async function doLogin() {
       body
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Login failed');
+    if (!res.ok) {
+      let msg = 'Login failed';
+
+      if (typeof data.detail === 'string') {
+        msg = data.detail;
+      } else if (Array.isArray(data.detail)) {
+        msg = data.detail.map(e => e.msg).join(', ');
+      } else if (typeof data.detail === 'object') {
+        msg = Object.values(data.detail).join(', ');
+      }
+
+      throw new Error(msg);
+    }
     token = data.access_token;
     userEmail = email;
     localStorage.setItem('snip_token', token);
@@ -871,6 +890,11 @@ async function doRegister() {
   const email = document.getElementById('reg-email').value.trim();
   const pass  = document.getElementById('reg-password').value;
   if (!email || !pass) return showAuthError('Please fill in all fields.');
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(email)) {
+    return showAuthError('Please enter a valid email address.');
+  }
 
   const btn = document.querySelector('#form-register .btn-primary');
   btn.innerHTML = '<span class="spinner"></span>';
@@ -904,6 +928,9 @@ function doLogout() {
   localStorage.removeItem('snip_token');
   localStorage.removeItem('snip_email');
   allUrls = [];
+  document.getElementById('shorten-error').classList.remove('show');
+  document.getElementById('shorten-result').classList.remove('show');
+  document.getElementById('url-input').value = '';
   showAuth();
 }
 
