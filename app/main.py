@@ -5,18 +5,12 @@ from fastapi.staticfiles import StaticFiles
 from .routers import users, urls
 import os
 from threading import Thread
-from app.worker import sync_clicks
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
 FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")  
 
 app = FastAPI(title="URL Shortener", version="1.0.0")
 
-@app.on_event("startup")
-def start_worker():
-    thread = Thread(target=sync_clicks, daemon=True)
-    thread.start()
-    
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
