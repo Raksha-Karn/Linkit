@@ -2,291 +2,1104 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>URL Shortener</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Linkit — URL Shortener</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
 <style>
-  .fade { transition: all 0.3s ease; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    25% { transform: translateX(-4px); }
-    75% { transform: translateX(4px); }
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --surface3: #26262e;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --accent: #c8f04a;
+    --accent-dim: rgba(200,240,74,0.12);
+    --accent-dim2: rgba(200,240,74,0.06);
+    --text: #f0efea;
+    --text-muted: #8a8a94;
+    --text-faint: #4a4a54;
+    --danger: #ff5c5c;
+    --danger-dim: rgba(255,92,92,0.1);
+    --success: #4ade80;
+    --success-dim: rgba(74,222,128,0.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 20px;
+    --mono: 'DM Mono', monospace;
+    --serif: 'DM Serif Display', serif;
+    --sans: 'Instrument Sans', sans-serif;
+    --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
   }
 
-  .shake {
-    animation: shake 0.2s;
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,240,74,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  * { position: relative; z-index: 1; }
+
+  .app { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 60px;
+  }
+
+  .logo {
+    font-family: var(--serif);
+    font-size: 26px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    box-shadow: 0 0 12px var(--accent);
+  }
+
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+
+  .nav-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .nav-user .avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent);
+    font-family: var(--mono);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    border: 1px solid transparent;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0d0d0f;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { background: #d8ff5a; box-shadow: 0 0 24px rgba(200,240,74,0.3); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); border-color: var(--border-hover); }
+
+  .btn-danger {
+    background: var(--danger-dim);
+    color: var(--danger);
+    border-color: rgba(255,92,92,0.2);
+  }
+  .btn-danger:hover { background: rgba(255,92,92,0.18); }
+
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-icon { padding: 8px; border-radius: var(--radius-sm); }
+
+  .view { display: none; animation: fadeUp 0.35s ease both; }
+  .view.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .auth-wrap {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 48px 0;
+  }
+
+  .auth-header { text-align: center; margin-bottom: 36px; }
+  .auth-header h1 {
+    font-family: var(--serif);
+    font-size: 38px;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  .auth-header h1 em { color: var(--accent); font-style: italic; }
+  .auth-header p { color: var(--text-muted); font-size: 15px; }
+
+  .auth-tabs {
+    display: flex;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 9px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all var(--transition);
+    user-select: none;
+  }
+  .auth-tab.active {
+    background: var(--surface3);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+  }
+
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    transition: all var(--transition);
+    outline: none;
+  }
+  .form-group input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  .form-group input::placeholder { color: var(--text-faint); }
+
+  .auth-submit { width: 100%; padding: 13px; font-size: 15px; margin-top: 8px; }
+
+  .auth-error {
+    display: none;
+    background: var(--danger-dim);
+    border: 1px solid rgba(255,92,92,0.2);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--danger);
+    margin-bottom: 16px;
+  }
+  .auth-error.show { display: block; }
+
+  .dash-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .dash-title h1 {
+    font-family: var(--serif);
+    font-size: 42px;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .dash-title h1 span { color: var(--accent); }
+  .dash-title p { color: var(--text-muted); }
+
+  .shorten-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 40px;
+    transition: border-color var(--transition);
+  }
+  .shorten-box:focus-within { border-color: var(--border-hover); }
+
+  .shorten-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    margin-bottom: 14px;
+  }
+
+  .shorten-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .shorten-row input {
+    flex: 1;
+    min-width: 240px;
+    padding: 13px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    outline: none;
+    transition: all var(--transition);
+  }
+  .shorten-row input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  .shorten-row input::placeholder { color: var(--text-faint); font-family: var(--sans); }
+
+  .shorten-options {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .shorten-options label { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .shorten-options select, .shorten-options input[type=number] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 5px 10px;
+    outline: none;
+  }
+
+  .shorten-result {
+    display: none;
+    margin-top: 18px;
+    padding: 14px 18px;
+    background: var(--accent-dim2);
+    border: 1px solid rgba(200,240,74,0.15);
+    border-radius: var(--radius-sm);
+    display: none;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .shorten-result.show { display: flex; animation: fadeUp 0.3s ease both; }
+
+  .shorten-result .short-url {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    flex: 1;
+  }
+
+  .shorten-error {
+    display: none;
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: var(--danger-dim);
+    border: 1px solid rgba(255,92,92,0.2);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--danger);
+  }
+  .shorten-error.show { display: block; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+  }
+
+  .url-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .url-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all var(--transition);
+    animation: fadeUp 0.3s ease both;
+    flex-wrap: wrap;
+  }
+  .url-item:hover { border-color: var(--border-hover); background: var(--surface2); }
+
+  .url-item-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(200,240,74,0.15);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+
+  .url-item-info { flex: 1; min-width: 180px; overflow: hidden; }
+
+  .url-item-original {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 360px;
+    display: block;
+  }
+
+  .url-item-short {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .url-item-short .code { color: var(--accent); }
+
+  .url-meta { display: flex; align-items: center; gap: 12px; flex-shrink: 0; flex-wrap: wrap; }
+
+  .click-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .click-badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .expires-badge {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-family: var(--mono);
+  }
+
+  .url-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    max-width: 480px;
+    width: 100%;
+    animation: scaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes scaleIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .modal-title {
+    font-family: var(--serif);
+    font-size: 26px;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  .modal-url-display {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-muted);
+    word-break: break-all;
+    line-height: 1.6;
+  }
+
+  .modal-url-display .highlight { color: var(--accent); }
+
+  .empty {
+    text-align: center;
+    padding: 64px 24px;
+    color: var(--text-faint);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .empty h3 { font-size: 18px; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+  .empty p { font-size: 14px; }
+
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: -3px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .btn .spinner { border-top-color: #0d0d0f; }
+
+  #toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface3);
+    border: 1px solid var(--border-hover);
+    border-radius: 100px;
+    padding: 10px 20px;
+    font-size: 14px;
+    color: var(--text);
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+    opacity: 0;
+    z-index: 999;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  #toast .toast-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  .divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    border: 1px solid rgba(200,240,74,0.2);
+  }
+
+  .loading-state { padding: 40px; text-align: center; color: var(--text-faint); font-size: 14px; }
+
+  @media (max-width: 600px) {
+    nav { margin-bottom: 36px; }
+    .dash-title h1 { font-size: 32px; }
+    .auth-header h1 { font-size: 30px; }
+    .url-item { padding: 14px 16px; }
+    .stats-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
+<body>
+<div class="app">
 
-<body class="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
+  <nav>
+    <div class="logo">
+      <span class="logo-dot"></span>
+      Linkit
+    </div>
+    <div class="nav-right" id="nav-right">
+     
+    </div>
+  </nav>
 
-<div id="toast" class="hidden fixed top-5 right-5 px-4 py-2 rounded shadow-lg text-white"></div>
+  <div class="view active" id="view-auth">
+    <div class="auth-wrap">
+      <div class="auth-header">
+        <h1>Cut the <em>clutter</em></h1>
+        <p>Shorter links. Smarter tracking. No noise.</p>
+      </div>
 
-<div class="bg-white shadow-sm p-4 flex justify-between items-center">
-  <h1 class="text-xl font-bold"> URL Shortener</h1>
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign in</div>
+        <div class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Create account</div>
+      </div>
 
-  <div id="userBar" class="hidden items-center gap-3">
-    <span class="text-sm text-gray-600">Logged in</span>
-    <button onclick="logout()" class="bg-red-500 text-white px-3 py-1 rounded">
-      Logout
-    </button>
+      <div class="auth-card">
+        <div class="auth-error" id="auth-error"></div>
+
+        <div id="form-login">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+          </div>
+          <button class="btn btn-primary auth-submit" onclick="doLogin()">
+            <span id="login-btn-text">Sign in</span>
+          </button>
+        </div>
+
+        <div id="form-register" style="display:none">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="reg-password" placeholder="Create a password" autocomplete="new-password" />
+          </div>
+          <button class="btn btn-primary auth-submit" onclick="doRegister()">
+            <span id="register-btn-text">Create account</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="view-dashboard">
+    <div class="dash-header">
+      <div class="dash-title">
+        <h1>Your <span>links</span></h1>
+        <p id="dash-subtitle">Manage and track all your shortened URLs</p>
+      </div>
+    </div>
+
+    <div class="shorten-box">
+      <div class="shorten-label">Shorten a URL</div>
+      <div class="shorten-row">
+        <input type="url" id="url-input" placeholder="https://your-very-long-url.com/goes/here/..." />
+        <button class="btn btn-primary" onclick="doShorten()">
+          <span id="shorten-btn-text">Shorten</span>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="shorten-options">
+        <label>
+          Expire after
+          <input type="number" id="expires-days" value="7" min="1" max="365" style="width:64px" />
+          days
+        </label>
+      </div>
+      <div class="shorten-error" id="shorten-error"></div>
+      <div class="shorten-result" id="shorten-result">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4.5" stroke="#c8f04a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="short-url" id="result-url"></span>
+        <button class="btn btn-ghost btn-sm" onclick="copyResult()">Copy</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-header">
+        <div class="section-title">All links</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadUrls()">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 6.5A5.5 5.5 0 0012 6.5M1 6.5l1.5-2M1 6.5l1.5 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="url-list" id="url-list">
+        <div class="loading-state">
+          <span class="spinner" style="border-top-color: var(--text-faint)"></span>
+          &nbsp; Loading links…
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="overlay" id="stats-overlay" onclick="closeStats(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title">Link stats</div>
+      </div>
+      <button class="btn btn-ghost btn-icon" onclick="closeStats()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total clicks</div>
+        <div class="stat-value" id="stat-clicks">—</div>
+        <div class="stat-sub" id="stat-clicks-sub"> </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Expires</div>
+        <div class="stat-value" style="font-size:18px; color: var(--text)" id="stat-expires">—</div>
+        <div class="stat-sub" id="stat-expires-sub"> </div>
+      </div>
+    </div>
+    <div class="modal-url-display" id="modal-url-display">—</div>
   </div>
 </div>
 
-<div class="max-w-5xl mx-auto p-6">
-
-  <div id="authBox" class="grid md:grid-cols-2 gap-6">
-
-    <div class="bg-white p-6 rounded-xl shadow" id="registerBox">
-      <h2 class="font-bold mb-3 text-lg">Create account</h2>
-
-      <input id="regEmail" class="border p-2 w-full mb-2 rounded" placeholder="Email">
-      <input id="regPass" type="password" class="border p-2 w-full mb-3 rounded" placeholder="Password">
-
-      <button id="registerBtn" onclick="register()" class="bg-blue-600 text-white w-full py-2 rounded">
-        Register
-      </button>
-    </div>
-
-    <div class="bg-white p-6 rounded-xl shadow" id="loginBox">
-      <h2 class="font-bold mb-3 text-lg">Welcome back</h2>
-
-      <input id="loginEmail" class="border p-2 w-full mb-2 rounded" placeholder="Email">
-      <input id="loginPass" type="password" class="border p-2 w-full mb-3 rounded" placeholder="Password">
-
-      <button id="loginBtn" onclick="login()" class="bg-green-600 text-white w-full py-2 rounded">
-        Login
-      </button>
-    </div>
-
-  </div>
-
-  <div id="appBox" class="hidden fade">
-
-    <div class="flex gap-2 mb-6">
-      <button onclick="showTab('shorten')" class="tab bg-blue-600 text-white px-4 py-2 rounded">
-        Shorten
-      </button>
-      <button onclick="showTab('stats')" class="tab bg-gray-300 px-4 py-2 rounded">
-        Analytics
-      </button>
-    </div>
-
-    <div id="shortenTab" class="bg-white p-6 rounded-xl shadow">
-      <h2 class="font-bold mb-3">Create Short Link</h2>
-
-      <input id="url" class="border p-2 w-full mb-2 rounded" placeholder="https://example.com">
-      <input id="days" class="border p-2 w-full mb-3 rounded" placeholder="Expiry days (default 1)">
-
-      <button onclick="shorten()" class="bg-purple-600 text-white px-4 py-2 rounded w-full">
-        Generate
-      </button>
-
-      <div id="result" class="mt-4"></div>
-      <canvas id="qr" class="mt-4"></canvas>
-    </div>
-
-    <div id="statsTab" class="hidden bg-white p-6 rounded-xl shadow">
-      <h2 class="font-bold mb-3">Analytics</h2>
-
-      <input id="code" class="border p-2 w-full mb-3 rounded" placeholder="Enter short code">
-
-      <button onclick="getStats()" class="bg-yellow-500 text-white px-4 py-2 rounded w-full">
-        Get Stats
-      </button>
-
-      <pre id="stats" class="bg-gray-100 p-3 mt-4 rounded"></pre>
-      <canvas id="chart" class="mt-4"></canvas>
-    </div>
-
-  </div>
-
-</div>
+<!-- Toast -->
+<div id="toast"><span class="toast-dot"></span><span id="toast-msg">Copied!</span></div>
 
 <script>
-const API = "http://localhost:8000";
-let token = localStorage.getItem("token");
+const API = 'http://127.0.0.1:8000';  //API base URL here
+let token = localStorage.getItem('snip_token') || '';
+let userEmail = localStorage.getItem('snip_email') || '';
+let allUrls = [];
+let lastResult = null;
 
-function showToast(msg, type = "info") {
-  const el = document.getElementById("toast");
 
-  el.innerText = msg;
-  el.className =
-    "fixed top-5 right-5 px-4 py-2 rounded shadow-lg text-white fade " +
-    (type === "error" ? "bg-red-600" : "bg-black");
-
-  el.classList.remove("hidden");
-
-  setTimeout(() => el.classList.add("hidden"), 2500);
+function init() {
+  if (token) showDashboard();
+  else showAuth();
 }
 
-function checkAuth() {
-  if (token) {
-    document.getElementById("authBox").classList.add("hidden");
-    document.getElementById("appBox").classList.remove("hidden");
-    document.getElementById("userBar").classList.remove("hidden");
-  }
-}
-checkAuth();
-
-function logout() {
-  localStorage.removeItem("token");
-  location.reload();
+function showAuth() {
+  document.getElementById('view-auth').classList.add('active');
+  document.getElementById('view-dashboard').classList.remove('active');
+  document.getElementById('nav-right').innerHTML = '';
 }
 
-function showTab(tab) {
-  document.getElementById("shortenTab").classList.add("hidden");
-  document.getElementById("statsTab").classList.add("hidden");
-
-  document.getElementById(tab + "Tab").classList.remove("hidden");
+function showDashboard() {
+  document.getElementById('view-auth').classList.remove('active');
+  document.getElementById('view-dashboard').classList.add('active');
+  updateNav();
+  const initials = userEmail ? userEmail[0].toUpperCase() : '?';
+  document.getElementById('dash-subtitle').textContent = `Welcome back, ${userEmail}`;
+  loadUrls();
 }
 
-async function register() {
-  const btn = document.getElementById("registerBtn");
-
-  btn.disabled = true;
-  btn.innerText = "Creating...";
-
-  try {
-    const res = await fetch(API + "/auth/register", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        email: regEmail.value,
-        password: regPass.value
-      })
-    });
-
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      showToast(data.detail || "Registration failed", "error");
-      return;
-    }
-
-    showToast("Account created!");
-  } catch {
-    showToast("Network error", "error");
-  } finally {
-    btn.disabled = false;
-    btn.innerText = "Register";
-  }
-}
-
-async function login() {
-  const btn = document.getElementById("loginBtn");
-
-  btn.disabled = true;
-  btn.innerText = "Logging in...";
-
-  try {
-    const form = new URLSearchParams();
-    form.append("username", loginEmail.value);
-    form.append("password", loginPass.value);
-
-    const res = await fetch(API + "/auth/login", {
-      method: "POST",
-      body: form
-    });
-
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      showToast(data.detail || "Invalid credentials", "error");
-
-      loginBox.classList.add("shake");
-      setTimeout(() => loginBox.classList.remove("shake"), 200);
-
-      return;
-    }
-
-    token = data.access_token;
-    localStorage.setItem("token", token);
-
-    showToast("Welcome back!");
-    checkAuth();
-
-  } catch {
-    showToast("Network error", "error");
-  } finally {
-    btn.disabled = false;
-    btn.innerText = "Login";
-  }
-}
-
-async function shorten() {
-  const url = document.getElementById("url").value;
-  const days = parseInt(document.getElementById("days").value || "1");
-
-  const res = await fetch(API + "/shorten", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + token
-    },
-    body: JSON.stringify({
-      original_url: url,
-      expires_days: days
-    })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    showToast(data.detail || "Failed to shorten URL", "error");
-    return;
-  }
-
-  const shortUrl = `${API}/r/${data.short_code}`;
-
-  document.getElementById("result").innerHTML = `
-    <div class="p-3 bg-gray-50 rounded border">
-      <p class="font-semibold">Short URL</p>
-      <a class="text-blue-600" href="${shortUrl}" target="_blank">${shortUrl}</a>
-      <button onclick="navigator.clipboard.writeText('${shortUrl}')"
-        class="ml-2 bg-gray-300 px-2 py-1 rounded">
-        Copy
-      </button>
+function updateNav() {
+  const initials = userEmail ? userEmail.slice(0,2).toUpperCase() : '??';
+  document.getElementById('nav-right').innerHTML = `
+    <div class="nav-user">
+      <div class="avatar">${initials}</div>
+      <span>${userEmail}</span>
     </div>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>
   `;
-
-  QRCode.toCanvas(document.getElementById("qr"), shortUrl);
 }
 
-async function getStats() {
-  const code = document.getElementById("code").value;
+function switchAuthTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('tab-login').classList.toggle('active', isLogin);
+  document.getElementById('tab-register').classList.toggle('active', !isLogin);
+  document.getElementById('form-login').style.display = isLogin ? '' : 'none';
+  document.getElementById('form-register').style.display = isLogin ? 'none' : '';
+  document.getElementById('auth-error').classList.remove('show');
+}
 
-  const res = await fetch(API + "/stats/" + code, {
-    headers: {"Authorization": "Bearer " + token}
-  });
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
 
-  const data = await res.json();
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  if (!email || !pass) return showAuthError('Please fill in all fields.');
 
-  if (!res.ok) {
-    showToast(data.detail || "Failed to fetch stats", "error");
+  const btn = document.querySelector('#form-login .btn-primary');
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+
+  try {
+    const body = new URLSearchParams({ username: email, password: pass });
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Login failed');
+    token = data.access_token;
+    userEmail = email;
+    localStorage.setItem('snip_token', token);
+    localStorage.setItem('snip_email', email);
+    showDashboard();
+  } catch(e) {
+    showAuthError(e.message);
+  } finally {
+    btn.innerHTML = '<span id="login-btn-text">Sign in</span>';
+    btn.disabled = false;
+  }
+}
+
+// ── Register ──
+async function doRegister() {
+  const email = document.getElementById('reg-email').value.trim();
+  const pass  = document.getElementById('reg-password').value;
+  if (!email || !pass) return showAuthError('Please fill in all fields.');
+
+  const btn = document.querySelector('#form-register .btn-primary');
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Registration failed');
+    // Auto login
+    document.getElementById('login-email').value = email;
+    document.getElementById('login-password').value = pass;
+    switchAuthTab('login');
+    showAuthError('');
+    document.getElementById('auth-error').classList.remove('show');
+    await doLogin();
+  } catch(e) {
+    showAuthError(e.message);
+  } finally {
+    btn.innerHTML = '<span id="register-btn-text">Create account</span>';
+    btn.disabled = false;
+  }
+}
+
+function doLogout() {
+  token = ''; userEmail = '';
+  localStorage.removeItem('snip_token');
+  localStorage.removeItem('snip_email');
+  allUrls = [];
+  showAuth();
+}
+
+async function doShorten() {
+  const url  = document.getElementById('url-input').value.trim();
+  const days = parseInt(document.getElementById('expires-days').value) || 7;
+  const errEl = document.getElementById('shorten-error');
+  const resEl = document.getElementById('shorten-result');
+  errEl.classList.remove('show');
+  resEl.classList.remove('show');
+
+  if (!url) { errEl.textContent = 'Please enter a URL.'; errEl.classList.add('show'); return; }
+
+  const btn = document.querySelector('.shorten-row .btn-primary');
+  btn.disabled = true;
+  document.getElementById('shorten-btn-text').innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const res = await fetch(`${API}/shorten`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ original_url: url, expires_days: days })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Failed to shorten URL');
+    lastResult = data;
+    const shortUrl = `${API}/r/${data.short_code}`;
+    document.getElementById('result-url').textContent = shortUrl;
+    resEl.classList.add('show');
+    document.getElementById('url-input').value = '';
+    allUrls.unshift(data);
+    renderUrls();
+  } catch(e) {
+    if (e.message.includes('401') || e.message.toLowerCase().includes('auth')) {
+      doLogout();
+    }
+    errEl.textContent = e.message;
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    document.getElementById('shorten-btn-text').textContent = 'Shorten';
+  }
+}
+
+function copyResult() {
+  if (!lastResult) return;
+  const url = `${window.location.origin}${API}/r/${lastResult.short_code}`;
+  navigator.clipboard.writeText(url).then(() => showToast('Copied to clipboard'));
+}
+
+function copyUrl(code) {
+  const url = `${window.location.origin}${API}/r/${code}`;
+  navigator.clipboard.writeText(url).then(() => showToast('Link copied'));
+}
+
+function loadUrls() {
+  const stored = localStorage.getItem('snip_urls_' + userEmail);
+  if (stored) {
+    try { allUrls = JSON.parse(stored); } catch(e) { allUrls = []; }
+  }
+  renderUrls();
+}
+
+function saveUrls() {
+  localStorage.setItem('snip_urls_' + userEmail, JSON.stringify(allUrls));
+}
+
+function renderUrls() {
+  saveUrls();
+  const list = document.getElementById('url-list');
+  if (!allUrls.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🔗</div>
+        <h3>No links yet</h3>
+        <p>Shorten your first URL above to get started.</p>
+      </div>`;
     return;
   }
 
-  document.getElementById("stats").innerText =
-    JSON.stringify(data, null, 2);
+  list.innerHTML = allUrls.map((u, i) => {
+    const shortUrl = `${window.location.origin}${API}/r/${u.short_code}`;
+    const expires = u.expires_at ? new Date(u.expires_at) : null;
+    const expiresStr = expires ? expires.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : 'Never';
+    const isExpired = expires && expires < new Date();
+    const hostOnly = (() => { try { return new URL(u.original_url).hostname; } catch(e) { return u.original_url; } })();
 
-  new Chart(document.getElementById("chart"), {
-    type: "bar",
-    data: {
-      labels: ["Clicks"],
-      datasets: [{
-        label: "Total Clicks",
-        data: [data.click_count || 0]
-      }]
-    }
-  });
+    return `
+    <div class="url-item" style="animation-delay:${i * 0.04}s">
+      <div class="url-item-icon">🔗</div>
+      <div class="url-item-info">
+        <span class="url-item-short">
+          <span class="code">${u.short_code}</span>
+        </span>
+        <span class="url-item-original" title="${u.original_url}">${u.original_url}</span>
+      </div>
+      <div class="url-meta">
+        <span class="click-badge">
+          <span class="dot"></span>
+          ${u.click_count} click${u.click_count !== 1 ? 's' : ''}
+        </span>
+        <span class="expires-badge" style="${isExpired ? 'color:var(--danger)' : ''}">
+          ${isExpired ? 'Expired' : 'exp. ' + expiresStr}
+        </span>
+      </div>
+      <div class="url-actions">
+        <button class="btn btn-ghost btn-sm btn-icon" title="Copy link" onclick="copyUrl('${u.short_code}')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 10V2h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="openStats('${u.short_code}')">Stats</button>
+      </div>
+    </div>`;
+  }).join('');
 }
-</script>
 
+async function openStats(code) {
+  document.getElementById('stats-overlay').classList.add('show');
+  document.getElementById('modal-title').textContent = `/${code}`;
+  document.getElementById('stat-clicks').textContent = '…';
+  document.getElementById('stat-expires').textContent = '…';
+  document.getElementById('stat-clicks-sub').textContent = ' ';
+  document.getElementById('stat-expires-sub').textContent = ' ';
+  document.getElementById('modal-url-display').textContent = '…';
+
+  try {
+    const res = await fetch(`${API}/stats/${code}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Failed to fetch stats');
+
+    const idx = allUrls.findIndex(u => u.short_code === code);
+    if (idx !== -1) { allUrls[idx] = data; renderUrls(); }
+
+    const expires = data.expires_at ? new Date(data.expires_at) : null;
+    const isExpired = expires && expires < new Date();
+    const expiresStr = expires
+      ? expires.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'})
+      : 'Never';
+    const daysLeft = expires
+      ? Math.max(0, Math.ceil((expires - new Date()) / 86400000))
+      : null;
+
+    document.getElementById('stat-clicks').textContent = data.click_count;
+    document.getElementById('stat-clicks-sub').textContent = data.click_count === 0 ? 'no clicks yet' : 'total redirects';
+    document.getElementById('stat-expires').textContent = isExpired ? 'Expired' : expiresStr;
+    document.getElementById('stat-expires-sub').textContent = isExpired
+      ? 'this link is inactive'
+      : (daysLeft !== null ? `${daysLeft} days remaining` : 'does not expire');
+
+    const shortUrl = `${API}/r/${data.short_code}`;
+    document.getElementById('modal-url-display').innerHTML =
+      `<span class="highlight">${shortUrl}</span><br><br>→ <span style="color:var(--text-muted)">${data.original_url}</span>`;
+  } catch(e) {
+    document.getElementById('stat-clicks').textContent = '—';
+    document.getElementById('stat-expires').textContent = '—';
+    document.getElementById('modal-url-display').textContent = e.message;
+  }
+}
+
+function closeStats(e) {
+  if (!e || e.target === document.getElementById('stats-overlay')) {
+    document.getElementById('stats-overlay').classList.remove('show');
+  }
+}
+
+let toastTimer;
+function showToast(msg) {
+  document.getElementById('toast-msg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeStats();
+  if (e.key === 'Enter') {
+    if (document.getElementById('view-auth').classList.contains('active')) {
+      const activeTab = document.querySelector('.auth-tab.active');
+      if (activeTab.id === 'tab-login') doLogin();
+      else doRegister();
+    }
+  }
+});
+
+document.getElementById('url-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doShorten();
+});
+
+init();
+</script>
 </body>
 </html>
