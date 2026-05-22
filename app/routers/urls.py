@@ -79,9 +79,7 @@ def redirect_url(code: str, request: Request, db: Session = Depends(get_db)):
 
     r.setex(name=cache_key, value=url.original_url, time=3600)
     
-    redis_clicks = int(r.getdel(f"clicks:{code}") or 0)
-    url.click_count += redis_clicks + 1
-    db.commit()
+    r.incr(f"clicks:{code}")
     return RedirectResponse(url.original_url)
 
 @router.get("/stats/{code}", response_model=schema.URLOut)
@@ -90,9 +88,34 @@ def get_stats(
     db: Session = Depends(get_db),
     email: str = Depends(auth.decode_token)
 ):
+    user = db.query(models.User).filter(models.User.email == email).first()
     url = db.query(models.URL).filter(models.URL.short_code == code).first()
+    if url.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
     if not url:
         raise HTTPException(404)
     redis_clicks = int(r.get(f"clicks:{code}") or 0)
     url.click_count += redis_clicks
     return url
+
+@router.get("/urls", response_model=list[schema.URLOut])
+def get_user_urls(
+    db: Session = Depends(get_db),
+    email: str = Depends(auth.decode_token)
+):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    urls = (
+        db.query(models.URL)
+        .filter(models.URL.owner_id == user.id)
+        .order_by(models.URL.id.desc())
+        .all()
+    )
+
+    for url in urls:
+        redis_clicks = int(r.get(f"clicks:{url.short_code}") or 0)
+        url.click_count += redis_clicks
+
+    return urls
