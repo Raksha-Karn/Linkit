@@ -3,15 +3,16 @@ from .routers import users, urls
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, FileResponse
 import socket
+import os
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-FRONTEND_PATH = BASE_DIR / "frontend" / "index.html"
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_PATH = os.path.join(BASE_DIR, "..", "frontend")
 
 app = FastAPI(title="URL Shortener", version="1.0.0")
-app.mount("/frontend", StaticFiles(directory="frontend", html=True), name="frontend")
+app.mount("/frontend", StaticFiles(directory=FRONTEND_PATH, html=True), name="frontend")
+
 @app.get("/favicon.ico")
 def favicon():
     return Response(status_code=204) 
