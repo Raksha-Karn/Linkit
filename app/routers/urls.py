@@ -12,21 +12,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-r = redis.Redis(host=os.getenv("REDIS_HOST", "redis"), port=int(os.getenv("REDIS_PORT", 6379)), decode_responses=True)
+r = redis.Redis(
+    host=os.getenv("REDIS_HOST", "redis"),
+    port=int(os.getenv("REDIS_PORT", 6379)),
+    decode_responses=True
+)
 
-WINDOW_SIZE = 60   
-LIMIT = 10   
+WINDOW_SIZE = 60
+LIMIT = 10
 
 def rate_limit(ip: str):
     key = f"rate:{ip}"
     now = time.time()
-
     pipeline = r.pipeline()
     pipeline.zremrangebyscore(key, 0, now - WINDOW_SIZE)
     pipeline.zadd(key, {str(now): now})
     pipeline.zcard(key)
     pipeline.expire(key, WINDOW_SIZE)
-
     _, _, count, _ = pipeline.execute()
     if count > LIMIT:
         raise HTTPException(
@@ -37,18 +39,25 @@ def rate_limit(ip: str):
 router = APIRouter(tags=["urls"])
 
 @router.post("/shorten", response_model=schema.URLOut)
-def shorten_url(data: schema.URLCreate, request: Request, db: Session = Depends(get_db), email: str = Depends(auth.decode_token)):
+def shorten_url(
+    data: schema.URLCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    email: str = Depends(auth.decode_token)
+):
     rate_limit(request.client.host)
     owner = db.query(models.User).filter(models.User.email == email).first()
     short_code = secrets.token_urlsafe(6)
-    expire = datetime.utcnow() + timedelta(data.expires_days)
+    expire = datetime.now(timezone.utc) + timedelta(days=data.expires_days)
     url = models.URL(
         original_url=str(data.original_url),
         short_code=short_code,
         owner_id=owner.id,
         expires_at=expire
     )
-    db.add(url); db.commit(); db.refresh(url)
+    db.add(url)
+    db.commit()
+    db.refresh(url)
     return url
 
 @router.get("/r/{code}")
@@ -56,22 +65,35 @@ def redirect_url(code: str, request: Request, db: Session = Depends(get_db)):
     rate_limit(request.client.host)
     cache_key = f"url:{code}"
     cached_url = r.get(cache_key)
+
     if cached_url:
         print("Cache hit")
+        r.hincrby(f"clicks:{code}", "count", 1)
         return RedirectResponse(str(cached_url))
+
     print("Cache miss")
     url = db.query(models.URL).filter(models.URL.short_code == code).first()
     if not url:
         raise HTTPException(404)
-    if url.expires_at and datetime.utcnow() > url.expires_at:
+    if url.expires_at and datetime.now(timezone.utc) > url.expires_at:
         raise HTTPException(410, detail="Link expired")
+
     r.setex(name=cache_key, value=url.original_url, time=3600)
-    url.click_count += 1; db.commit()
+    
+    redis_clicks = int(r.getdel(f"clicks:{code}") or 0)
+    url.click_count += redis_clicks + 1
+    db.commit()
     return RedirectResponse(url.original_url)
 
 @router.get("/stats/{code}", response_model=schema.URLOut)
-def get_stats(code: str, db: Session = Depends(get_db), email: str = Depends(auth.decode_token)):
+def get_stats(
+    code: str,
+    db: Session = Depends(get_db),
+    email: str = Depends(auth.decode_token)
+):
     url = db.query(models.URL).filter(models.URL.short_code == code).first()
     if not url:
         raise HTTPException(404)
+    redis_clicks = int(r.get(f"clicks:{code}") or 0)
+    url.click_count += redis_clicks
     return url
