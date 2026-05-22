@@ -4,10 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, FileResponse
 import socket
 from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_PATH = BASE_DIR / "frontend" / "index.html"
 
 
 app = FastAPI(title="URL Shortener", version="1.0.0")
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+app.mount("/frontend", StaticFiles(directory="frontend", html=True), name="frontend")
 @app.get("/favicon.ico")
 def favicon():
     return Response(status_code=204) 
@@ -24,8 +28,8 @@ app.add_middleware(
 )
 
 @app.get("/")
-def serve_frontend():
-    return FileResponse("frontend/index.html")
+def root():
+    return FileResponse(FRONTEND_PATH)
 
 @app.get("/health")
 def health():
