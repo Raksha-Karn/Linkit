@@ -783,7 +783,7 @@
 <div id="toast"><span class="toast-dot"></span><span id="toast-msg">Copied!</span></div>
 
 <script>
-const API = window.location.origin;  
+const API = "";  
 let token = localStorage.getItem('snip_token') || '';
 let userEmail = localStorage.getItem('snip_email') || '';
 let allUrls = [];
@@ -867,7 +867,6 @@ async function doLogin() {
   }
 }
 
-// ── Register ──
 async function doRegister() {
   const email = document.getElementById('reg-email').value.trim();
   const pass  = document.getElementById('reg-password').value;
@@ -885,7 +884,7 @@ async function doRegister() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Registration failed');
-    // Auto login
+
     document.getElementById('login-email').value = email;
     document.getElementById('login-password').value = pass;
     switchAuthTab('login');
