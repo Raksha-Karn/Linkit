@@ -11,7 +11,7 @@ FRONTEND_PATH = BASE_DIR / "frontend" / "index.html"
 
 
 app = FastAPI(title="URL Shortener", version="1.0.0")
-app.mount("/frontend", StaticFiles(directory="frontend", html=True), name="frontend")
+# app.mount("/frontend", StaticFiles(directory="frontend", html=True), name="frontend")
 @app.get("/favicon.ico")
 def favicon():
     return Response(status_code=204) 
