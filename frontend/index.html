@@ -954,12 +954,12 @@ async function doShorten() {
 
 function copyResult() {
   if (!lastResult) return;
-  const url = `${window.location.origin}${API}/r/${lastResult.short_code}`;
+  const url = `${API}/r/${lastResult.short_code}`;
   navigator.clipboard.writeText(url).then(() => showToast('Copied to clipboard'));
 }
 
 function copyUrl(code) {
-  const url = `${window.location.origin}${API}/r/${code}`;
+  const url = `${API}/r/${code}`;
   navigator.clipboard.writeText(url).then(() => showToast('Link copied'));
 }
 
@@ -989,7 +989,7 @@ function renderUrls() {
   }
 
   list.innerHTML = allUrls.map((u, i) => {
-    const shortUrl = `${window.location.origin}${API}/r/${u.short_code}`;
+    const shortUrl = `${API}/r/${u.short_code}`;
     const expires = u.expires_at ? new Date(u.expires_at) : null;
     const expiresStr = expires ? expires.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : 'Never';
     const isExpired = expires && expires < new Date();
